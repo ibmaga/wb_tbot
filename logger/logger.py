@@ -1,7 +1,12 @@
 import logging
 
+
+FORMAT = "%(levelname)s:     %(filename)s:%(lineno)s - %(message)s [%(asctime)s]"
+DATE_FMT = "%H:%M:%S %d-%m-%Y"
 logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(levelname)s   %(msg)s: %(filename)s:%(lineno)s - %(name)s [%(asctime)s]",
+    level=logging.INFO,
+    format=FORMAT,
+    datefmt=DATE_FMT,
 )
+
 logger = logging.getLogger("__main__")
