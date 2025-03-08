@@ -3,7 +3,7 @@ from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject, User
 
 from db.database import user_db
-from lexicon.lexicon import LEXICON, VIEW_WAREHOUSES
+from lexicon.lexicon import TEXTS, VIEW_WAREHOUSES
 
 
 class AddUser(BaseMiddleware):
@@ -13,7 +13,7 @@ class AddUser(BaseMiddleware):
         event: TelegramObject,
         data: Dict[str, Any],
     ) -> Any:
-        data["lexicon"] = LEXICON
+        data["texts ё"] = TEXTS
         data["view_warehouses_lexicon"] = VIEW_WAREHOUSES
 
         user: User = data["event_from_user"]
