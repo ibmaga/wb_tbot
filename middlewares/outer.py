@@ -13,7 +13,7 @@ class AddUser(BaseMiddleware):
         event: TelegramObject,
         data: Dict[str, Any],
     ) -> Any:
-        data["texts ё"] = TEXTS
+        data["texts"] = TEXTS
         data["view_warehouses_lexicon"] = VIEW_WAREHOUSES
 
         user: User = data["event_from_user"]

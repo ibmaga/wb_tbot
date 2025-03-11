@@ -1,6 +1,6 @@
 """название и значение кнопок"""
 
-BUTTONS: dict[str, dict] = {
+KEYBOARDS: dict[str, dict] = {
     "menu": {
         # 'products': 'Продукты',
         "rates": "Ставки",
