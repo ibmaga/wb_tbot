@@ -1,7 +1,7 @@
 from aiogram.filters.callback_data import CallbackData
 
-from keyboards.base.inline import InlineKeyBoard
-from lexicon.buttons import KEYBOARDS
+from tgbot.keyboards.base.inline import InlineKeyBoard
+from tgbot.lexicon.buttons import KEYBOARDS
 
 
 class UserInlineKeyboard(InlineKeyBoard):

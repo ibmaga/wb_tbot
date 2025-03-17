@@ -1,8 +1,8 @@
 from aiogram import Router
 from aiogram.types import Message
-from aiogram.filters import Command, CommandStart
+from aiogram.filters import Command
 
-from keyboards.user import menus
+from tgbot.keyboards.user import menus
 
 router = Router()
 

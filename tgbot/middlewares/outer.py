@@ -2,8 +2,8 @@ from typing import Any, Callable, Dict, Awaitable
 from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject, User
 
-from db.database import user_db
-from lexicon.lexicon import TEXTS, VIEW_WAREHOUSES
+# from db.models.users import user_db
+from tgbot.lexicon.lexicon import TEXTS, VIEW_WAREHOUSES
 
 
 class AddUser(BaseMiddleware):
@@ -22,5 +22,5 @@ class AddUser(BaseMiddleware):
             data["users_db"] = {}
 
         # сохранение данных пользователя
-        data["users_db"][str(user.id)] = data.get(str(user.id), user_db)
+        # data["users_db"][str(user.id)] = data.get(str(user.id), user_db)
         return await handler(event, data)
