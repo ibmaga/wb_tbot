@@ -22,7 +22,7 @@ config.set_section_option(section, "DB_PASS", settings.DB_PASS)
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-from db.models import *
+from db.models.base import Base
 
 # add your model's MetaData object here
 # for 'autogenerate' support
