@@ -16,7 +16,7 @@ class BaseDAO(Generic[ModelType]):
 
     async def create(self, **data) -> ModelType:
         instance = self.model(**data)
-        self.session.add(instance)
+        await self.session.merge(instance)
         await self.session.commit()
         return instance
 
