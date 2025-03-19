@@ -14,7 +14,7 @@ class BaseDAO(Generic[ModelType]):
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def create(self, data: dict[str, Any]) -> ModelType:
+    async def create(self, **data) -> ModelType:
         instance = self.model(**data)
         self.session.add(instance)
         await self.session.commit()
@@ -25,7 +25,7 @@ class BaseDAO(Generic[ModelType]):
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def update(self, id: int, data: dict[str, Any]) -> Optional[ModelType]:
+    async def update(self, id: int, **data) -> Optional[ModelType]:
         stmt: Update = update(self.model).where(self.model.id == id).values(**data)
         result = await self.session.execute(stmt)
         await self.session.commit()
