@@ -6,9 +6,13 @@ from aiogram.enums import ParseMode
 from aiogram.fsm.storage.redis import RedisStorage, Redis
 
 from core.config import settings
-from tgbot.handlers import cmds, menu_proc
+from core.logger import logger
+from db.setup import async_session
+from tgbot.handlers import commands
+from tgbot.handlers.user import menu
 from tgbot.keyboards import base_menu
-from tgbot.middlewares import AddUser, History
+from tgbot.lexicon.lexicon import TEXTS
+from tgbot.middlewares import SaveUser, History, DbSessionMiddleware, TextsMiddleware
 
 
 redis = Redis()
@@ -22,10 +26,12 @@ async def main():
         default=DefaultBotProperties(parse_mode=ParseMode.HTML),
     )
 
-    dp.include_routers(cmds.router, menu_proc.router)
+    dp.include_routers(commands.router, menu.router)
 
-    dp.update.outer_middleware(AddUser())
-    menu_proc.router.callback_query.middleware(History())
+    menu.router.callback_query.middleware(History())
+    commands.router.message.middleware(SaveUser())
+    dp.update.outer_middleware(DbSessionMiddleware(async_session))
+    dp.update.outer_middleware(TextsMiddleware(TEXTS))
 
     dp.startup.register(base_menu.set_main_menu)
     await dp.start_polling(bot)
