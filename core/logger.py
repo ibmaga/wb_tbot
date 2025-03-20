@@ -1,3 +1,4 @@
+from functools import lru_cache
 import logging
 
 
@@ -9,4 +10,9 @@ logging.basicConfig(
     datefmt=DATE_FMT,
 )
 
-logger = logging.getLogger("__main__")
+
+@lru_cache
+def get_logger(name: str) -> logging.Logger:
+    logger = logging.getLogger(name)
+    logger.setLevel(logging.INFO)
+    return logger

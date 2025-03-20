@@ -6,7 +6,7 @@ from aiogram.enums import ParseMode
 from aiogram.fsm.storage.redis import RedisStorage, Redis
 
 from core.config import settings
-from core.logger import logger
+from core.logger import get_logger
 from db.setup import async_session
 from tgbot.handlers import commands
 from tgbot.handlers.user import menu
@@ -25,7 +25,7 @@ async def main():
         settings.TOKEN,
         default=DefaultBotProperties(parse_mode=ParseMode.HTML),
     )
-
+    logger = get_logger(__name__)
     dp.include_routers(commands.router, menu.router)
 
     menu.router.callback_query.middleware(History())
