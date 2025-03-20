@@ -10,7 +10,7 @@ from core.logger import get_logger
 from db.setup import async_session
 from tgbot.handlers import commands
 from tgbot.handlers.user import menu
-from tgbot.keyboards import base_menu
+from tgbot.keyboards import default_menu
 from tgbot.lexicon.lexicon import TEXTS
 from tgbot.middlewares import SaveUser, History, DbSessionMiddleware, TextsMiddleware
 
@@ -33,7 +33,7 @@ async def main():
     dp.update.outer_middleware(DbSessionMiddleware(async_session))
     dp.update.outer_middleware(TextsMiddleware(TEXTS))
 
-    dp.startup.register(base_menu.set_main_menu)
+    dp.startup.register(default_menu.set_main_menu)
     await dp.start_polling(bot)
 
 
