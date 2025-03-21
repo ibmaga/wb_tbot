@@ -1,26 +1,39 @@
-from typing import Any, Callable, Dict, Awaitable
+from typing import Callable, Awaitable, Any, Dict
+
 from aiogram import BaseMiddleware
-from aiogram.types import TelegramObject, User
+from aiogram.types import TelegramObject
+from sqlalchemy.ext.asyncio import async_sessionmaker
 
-# from db.models.users import user_db
-from tgbot.lexicon.lexicon import TEXTS, VIEW_WAREHOUSES
+from services.user_service import UserService
 
 
-class AddUser(BaseMiddleware):
+class DbSessionMiddleware(BaseMiddleware):
+    def __init__(self, session_pool: async_sessionmaker):
+        super().__init__()
+        self.session_pool = session_pool
+
     async def __call__(
         self,
         handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]],
         event: TelegramObject,
         data: Dict[str, Any],
     ) -> Any:
-        data["texts"] = TEXTS
-        data["view_warehouses_lexicon"] = VIEW_WAREHOUSES
+        async with self.session_pool() as session:
+            data["session"] = session
+            data["user_service"] = UserService(session)
+            return await handler(event, data)
 
-        user: User = data["event_from_user"]
 
-        if "users_db" not in data:
-            data["users_db"] = {}
+class TextsMiddleware(BaseMiddleware):
+    def __init__(self, texts: Dict[str, str]):
+        super().__init__()
+        self.texts = texts
 
-        # сохранение данных пользователя
-        # data["users_db"][str(user.id)] = data.get(str(user.id), user_db)
+    async def __call__(
+        self,
+        handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]],
+        event: TelegramObject,
+        data: Dict[str, Any],
+    ) -> Any:
+        data["texts"] = self.texts
         return await handler(event, data)

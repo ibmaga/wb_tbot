@@ -1,55 +1,71 @@
 from typing import Any, Callable, Awaitable, Dict
+
 from aiogram import BaseMiddleware, Bot
-from aiogram.types import TelegramObject, User, Chat, Update
 from aiogram.fsm.context import FSMContext
+from aiogram.types import TelegramObject, User, Chat, Update
+
+from services.user_service import UserService
+
+
+class SaveUser(BaseMiddleware):
+    async def __call__(
+        self,
+        handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]],
+        event: TelegramObject,
+        data: Dict[str, Any],
+    ) -> Any:
+        user: User = data["event_from_user"]
+        user_service: UserService = data["user_service"]
+        await user_service.user_dao.create(
+            user_id=user.id,
+            username=user.username,
+            full_name=user.full_name,
+        )
+        return await handler(event, data)
 
 
 # проверка на наличие API ключа // временно не используется
 class IsToken(BaseMiddleware):
     async def __call__(
-            self,
-            handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]],
-            event: TelegramObject,
-            data: Dict[str, Any]
+        self,
+        handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]],
+        event: TelegramObject,
+        data: Dict[str, Any],
     ) -> Any:
-        user: User = data['event_from_user']
-        chat: Chat = data['event_chat']
-        bot: Bot = data['bot']
-        update: Update = data['event_update']
-        token = data['users_db'][str(user.id)]['tokens'][event.data]
+        user: User = data["event_from_user"]
+        chat: Chat = data["event_chat"]
+        bot: Bot = data["bot"]
+        update: Update = data["event_update"]
+        token = data["users_db"][str(user.id)]["tokens"][event.data]
 
         if token is not None:
             return await handler(event, data)
 
-        await bot.answer_callback_query(callback_query_id=update.callback_query.id, text='')
-        await bot.send_message(chat_id=chat.id, text=data['lexicon']['send_token'])
+        await bot.answer_callback_query(
+            callback_query_id=update.callback_query.id, text=""
+        )
+        await bot.send_message(chat_id=chat.id, text=data["lexicon"]["send_token"])
 
 
 # Сохранение предыдущих состояний клавиатуры для последующих возвращений
 class History(BaseMiddleware):
     async def __call__(
-            self,
-            handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]],
-            event: TelegramObject,
-            data: Dict[str, Any]
+        self,
+        handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]],
+        event: TelegramObject,
+        data: Dict[str, Any],
     ):
         state: FSMContext = data['state']
         history: list = (await state.get_data()).get('history', [])
         key: str = event.data.split('|')[1]
 
         # добавляем меню в начало
-        keyboard = {
-            'lexicon_key': '/menu',
-            'keyboard': 'menu'
-        }
+        keyboard = {"lexicon_key": "/menu", "keyboard": "menu"}
         if keyboard not in history:
             history.append(keyboard)
 
-        if key != 'back':
-            keyboard = {
-                'lexicon_key': key,
-                'keyboard': key
-            }
+        if key != "back":
+            keyboard = {"lexicon_key": key, "keyboard": key}
 
             if keyboard not in history:
                 history.append(keyboard)
