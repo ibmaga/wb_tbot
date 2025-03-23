@@ -1,12 +1,14 @@
-from db.models.users import User
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from db.dao.users import UserDAO
+from db.models.users import User
 from .base_service import BaseService
 
 
 class UserService(BaseService):
-    def __init__(self, session):
+    def __init__(self, session: AsyncSession):
+        super().__init__(session)
         self.user_dao = UserDAO(session)
-        self._session = session
 
     async def create_user(
         self,

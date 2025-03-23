@@ -2,9 +2,11 @@ from typing import Any, Callable, Awaitable, Dict
 
 from aiogram import BaseMiddleware, Bot
 from aiogram.fsm.context import FSMContext
-from aiogram.types import TelegramObject, User, Chat, Update
+from aiogram.types import TelegramObject, User, Chat, Update, CallbackQuery, Message
 
 from services.user_service import UserService
+from services.wb_service import WildberriesService
+from utils.wb_api.wb_api import WildberriesAPI
 
 
 class SaveUser(BaseMiddleware):
@@ -51,8 +53,8 @@ class IsToken(BaseMiddleware):
 class History(BaseMiddleware):
     async def __call__(
         self,
-        handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]],
-        event: TelegramObject,
+        handler: Callable[[CallbackQuery, Dict[str, Any]], Awaitable[Any]],
+        event: CallbackQuery,
         data: Dict[str, Any],
     ):
         state: FSMContext = data['state']
@@ -74,3 +76,22 @@ class History(BaseMiddleware):
         result = await handler(event, data)
 
         return result
+
+
+class WildberriesMiddleware(BaseMiddleware):
+    async def __call__(
+        self,
+        handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]],
+        event: Message | CallbackQuery,
+        data: Dict[str, Any],
+    ) -> Any:
+        user_service = data["user_service"]
+        user_id = event.from_user.id
+        wb_token = await user_service.get_wb_token(user_id)
+
+        if wb_token:
+            wb_api = WildberriesAPI(api_token=wb_token)
+            wb_service = WildberriesService(wb_api=wb_api)
+            data["wb_service"] = wb_service
+
+        return await handler(event, data)
