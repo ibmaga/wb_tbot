@@ -63,6 +63,13 @@ help = UserInlineKeyboard(
     ]
 )(3)
 
+back = UserInlineKeyboard(
+    *[
+        (text, CFactory(name=call, first=0).pack())
+        for call, text in KEYBOARDS["back_kbd"].items()
+    ]
+)(1)
+
 kbds = {
     "rates": rates,
     "warehouses": warehouses,
