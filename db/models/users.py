@@ -1,4 +1,4 @@
-from sqlalchemy import BIGINT, Integer
+from sqlalchemy import BIGINT, Integer, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
 from db.models.base import Base, TimeStampMixin, TableNameMixin
@@ -16,3 +16,14 @@ class User(Base, TableNameMixin, TimeStampMixin):
 
     def __repr__(self):
         return f"<User {self.user_id} {self.username} {self.access}>"
+
+
+class APIToken(Base, TableNameMixin):
+    id: Mapped[int] = mapped_column(
+        Integer, primary_key=True, index=True, nullable=False
+    )
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.user_id", ondelete="CASCADE")
+    )
+    supplies: Mapped[str] = mapped_column(default=None, nullable=True)
+    marketplace: Mapped[str] = mapped_column(default=None, nullable=True)
