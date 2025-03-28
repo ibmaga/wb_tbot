@@ -1,4 +1,5 @@
 from aiogram.filters.callback_data import CallbackData
+from aiogram.types import InlineKeyboardMarkup
 
 from tgbot.keyboards.base.inline import InlineKeyBoard
 from tgbot.lexicon.buttons import KEYBOARDS
@@ -35,19 +36,12 @@ warehouses = UserInlineKeyboard(
     ],
 )(3)
 
-view_warehouses = UserInlineKeyboard(
-    *[
-        (text, CFactory(name=call, first=2).pack())
-        for call, text in KEYBOARDS["view_warehouses_kbd"].items()
-    ],
-)(3)
-
 settings = UserInlineKeyboard(
     *[
         (text, CFactory(name=call, first=3).pack())
         for call, text in KEYBOARDS["settings_kbd"].items()
     ]
-)(3)
+)(2)
 
 api_keys = UserInlineKeyboard(
     *[
@@ -69,6 +63,21 @@ back = UserInlineKeyboard(
         for call, text in KEYBOARDS["back_kbd"].items()
     ]
 )(1)
+
+
+def create_list_warehouses(list_warehouses: list) -> InlineKeyboardMarkup:
+    """Создание клавиатуры для списка складов"""
+    return UserInlineKeyboard(
+        *[
+            (item["name"], CFactory(name=item["id"], first=2).pack())
+            for item in list_warehouses
+        ],
+        *[
+            (text, CFactory(name=call, first=0).pack())
+            for call, text in KEYBOARDS["back_kbd"].items()
+        ],
+    )(1)
+
 
 kbds = {
     "rates": rates,
