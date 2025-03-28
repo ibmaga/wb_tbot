@@ -1,4 +1,3 @@
-from typing import Any
 from sqlalchemy import select, update
 
 from db.dao.base import BaseDAO

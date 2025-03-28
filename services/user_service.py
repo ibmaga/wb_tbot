@@ -1,3 +1,4 @@
+from typing import Literal
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.dao.api_tokens import APITokenDAO
@@ -25,9 +26,20 @@ class UserService(BaseService):
         )
         return user
 
-    async def get_api_token(self, user_id: int, type_token: str) -> str | None:
+    async def get_api_token(
+        self, user_id: int, type_token: Literal["supplies", "marketplace"]
+    ) -> str | None:
         api_tokens: APIToken = await self.api_token_dao.get_api_tokens_by_user_id(
             user_id
         )
         if api_tokens:
             return getattr(api_tokens, type_token)
+
+    async def update_api_token(
+        self, user_id: int, type_token: Literal["supplies", "marketplace"], token: str
+    ):
+        api_token: APIToken = await self.api_token_dao.update_api_token_by_user_id(
+            user_id=user_id,
+            **{type_token: token},
+        )
+        return api_token
