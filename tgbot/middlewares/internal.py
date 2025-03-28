@@ -1,12 +1,14 @@
 from typing import Any, Callable, Awaitable, Dict
 
-from aiogram import BaseMiddleware, Bot
+from aiogram import BaseMiddleware
 from aiogram.fsm.context import FSMContext
-from aiogram.types import TelegramObject, User, Chat, Update, CallbackQuery, Message
+from aiogram.types import TelegramObject, User, CallbackQuery
 
 from services.user_service import UserService
 from services.wb_service import WildberriesService
+from tgbot.keyboards.user.menus import back, CFactory
 from utils.wb_api.wb_api import WildberriesAPI
+from tgbot.states import UserState
 
 
 class SaveUser(BaseMiddleware):
@@ -26,29 +28,6 @@ class SaveUser(BaseMiddleware):
         return await handler(event, data)
 
 
-# проверка на наличие API ключа // временно не используется
-class IsToken(BaseMiddleware):
-    async def __call__(
-        self,
-        handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]],
-        event: TelegramObject,
-        data: Dict[str, Any],
-    ) -> Any:
-        user: User = data["event_from_user"]
-        chat: Chat = data["event_chat"]
-        bot: Bot = data["bot"]
-        update: Update = data["event_update"]
-        token = data["users_db"][str(user.id)]["tokens"][event.data]
-
-        if token is not None:
-            return await handler(event, data)
-
-        await bot.answer_callback_query(
-            callback_query_id=update.callback_query.id, text=""
-        )
-        await bot.send_message(chat_id=chat.id, text=data["lexicon"]["send_token"])
-
-
 # Сохранение предыдущих состояний клавиатуры для последующих возвращений
 class History(BaseMiddleware):
     async def __call__(
@@ -57,9 +36,10 @@ class History(BaseMiddleware):
         event: CallbackQuery,
         data: Dict[str, Any],
     ):
-        state: FSMContext = data['state']
-        history: list = (await state.get_data()).get('history', [])
-        key: str = event.data.split('|')[1]
+        state: FSMContext = data["state"]
+        history: list = (await state.get_data()).get("history", [])
+        key: str = CFactory.unpack(event.data).name
+        print(event)
 
         # добавляем меню в начало
         keyboard = {"lexicon_key": "/menu", "keyboard": "menu"}
@@ -82,16 +62,27 @@ class WildberriesMiddleware(BaseMiddleware):
     async def __call__(
         self,
         handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]],
-        event: Message | CallbackQuery,
+        event: CallbackQuery,
         data: Dict[str, Any],
     ) -> Any:
-        user_service = data["user_service"]
+        texts = data["texts"]
+        user_service: UserService = data["user_service"]
         user_id = event.from_user.id
-        wb_token = await user_service.get_wb_token(user_id)
+        state: FSMContext = data["state"]
+        wb_token = await user_service.get_api_token(
+            user_id=user_id, type_token="supplies"
+        )
 
-        if wb_token:
-            wb_api = WildberriesAPI(api_token=wb_token)
-            wb_service = WildberriesService(wb_api=wb_api)
+        # написать функцию, которая будет показывать сообщение про то что нужно отправить api token или "у вас нет api token"
+
+        try:
+            wb_service = WildberriesService(wb_api=WildberriesAPI(api_token=wb_token))
+            await wb_service.validated_token()
             data["wb_service"] = wb_service
-
-        return await handler(event, data)
+            return await handler(event, data)
+        except Exception as e:
+            error_text = f"Ошибка API: {e}\nПожалуйста, обновите API ключ."
+            await event.message.edit_text(text=error_text, reply_markup=back)
+            await state.set_state(UserState.send_token)
+            print(e)
+            return
